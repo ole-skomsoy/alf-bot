@@ -21,4 +21,4 @@ async def on_message(message):
 def connect():
     client.run()
 
-connect()
+connect('token')
