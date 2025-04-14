@@ -1,4 +1,5 @@
 import discord as disc
+import json
 from commands import *
 
 class test_bot(disc.Client):
@@ -12,8 +13,15 @@ class test_bot(disc.Client):
                 await message.channel.send(commands[c])
                 break
 
-intents = disc.Intents.default()
-intents.message_content = True
+def connect():
+    intents = disc.Intents.default()
+    intents.message_content = True
+    client = test_bot(intents=intents)
+    
+    secrets_file = open('./src/secrets.json')
+    secrets_content = secrets_file.read()
+    token = json.loads(secrets_content)['discord_access_token']
+    
+    client.run(token)
 
-client = test_bot(intents=intents)
-client.run('')
+connect()
