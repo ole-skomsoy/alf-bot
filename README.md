@@ -14,6 +14,6 @@ application: https://discord.com/developers/applications/1359959433945288815/oau
 - jsonpickle
 
 #### TODOS
-- choose between different bots on startup, default after x seconds
-- roterende status, [poppa en prell, slurpa ørge, henge på ruta, YÆ]
+- read channel from secrets, restructure if nec.
+- rotating status, [poppa en prell, slurpa ørge, henge på ruta, YÆ]
 - proper display of commands

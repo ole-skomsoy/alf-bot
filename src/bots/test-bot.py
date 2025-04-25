@@ -1,10 +1,14 @@
 import discord as disc
 from datetime import datetime
-import json
 import jsonpickle
 import random
 from commands import *
+from helpers import *
 
+
+# how to 'repost'?
+# 1. forward
+# array of reactions, [🤭, 😂, 🤣, 😆], [🔥]
 class test_bot(disc.Client):
     async def on_ready(self):
         print(f'Logged in as {self.user}')
@@ -28,35 +32,28 @@ class test_bot(disc.Client):
         
     # 1. get random message in [created, now] (get batch)
     # 2. (todo) check if suitable
-    #   - no: select other message (dont pop in case context for another message)
-    # 3. (todo) check for missing context
+    #   - links: ['http://', 'https://'] contains message.content
+    #   - pictures:
+    #   - no link or pic: select other message
     async def get_random_message(self):
-        channel = self.get_channel(152136089367347200)
+        # channel = self.get_channel(152136089367347200) #syria
+        channel = self.get_channel(1365322546299273306) #bot-test-2
         around = datetime.fromtimestamp(random.randint(
                 int(channel.created_at.timestamp()), 
                 int(datetime.now().timestamp())))
     
-        # messages = channel.history(around=around, limit=1)
-        # numMessages = 0
-        # find suitable message
-        # async for message in messages:
-        #     numMessages += 1
-        #     print(message)
-        #     j = json.dumps(message)
-        
-        m = [message async for message in channel.history(around=around, limit=1)][0]
-        return m
+        m = [message async for message in channel.history(around=around, limit=10)]
+        for mi in m:
+            print('------------------------------------------------------------------------')
+            print(jsonpickle.encode(mi))
+        return m[0]
 
+# todo: move to main.py
 def connect():
     intents = disc.Intents.default()
     intents.message_content = True
     client = test_bot(intents=intents)
-    
-    secrets_file = open('./src/secrets.json')
-    secrets_content = secrets_file.read()
-    token = json.loads(secrets_content)['discord_access_token']
-    
-    # self.client = client
+    token = read_secret('discord_access_token')
     client.run(token)
-    
+
 connect()
