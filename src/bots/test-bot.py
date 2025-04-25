@@ -13,14 +13,14 @@ class test_bot(disc.Client):
     async def on_ready(self):
         print(f'Logged in as {self.user}')
         await self.set_default_status()
-        message = await self.get_random_message()
+        message = await self.post_random_message()
         print(jsonpickle.encode(message)) #json pls 
     
     async def on_message(self, message):
         if message.author == self.user : return
-        for c in commands:
-            if message.content.startswith(c):
-                await message.channel.send(commands[c])
+        for command in commands:
+            if message.content.startswith(command):
+                await message.channel.send(commands[command])
                 break
             elif message.content.startswith(1):
                 await self.read_messages()
@@ -30,23 +30,25 @@ class test_bot(disc.Client):
             activity=disc.Activity(type=disc.ActivityType.listening, name='🤫'),
             status=disc.Status.dnd)
         
-    # 1. get random message in [created, now] (get batch)
-    # 2. (todo) check if suitable
-    #   - links: ['http://', 'https://'] contains message.content
-    #   - pictures:
-    #   - no link or pic: select other message
-    async def get_random_message(self):
-        # channel = self.get_channel(152136089367347200) #syria
-        channel = self.get_channel(1365322546299273306) #bot-test-2
+    async def post_random_message(self):
+        meme_message = await self.get_random_message(10)
+        return meme_message
+    
+    async def get_random_message(self, retrycount):
+        channel = self.get_channel(read_secret('meme_channel'))
         around = datetime.fromtimestamp(random.randint(
                 int(channel.created_at.timestamp()), 
                 int(datetime.now().timestamp())))
-    
-        m = [message async for message in channel.history(around=around, limit=10)]
-        for mi in m:
-            print('------------------------------------------------------------------------')
-            print(jsonpickle.encode(mi))
-        return m[0]
+        suitable_content = ['http://', 'https://']
+        
+        try:
+            messages = [message async for message in channel.history(around=around, limit=100)]
+            for message in messages:
+                if any(c in message for c in suitable_content):
+                    return message
+        except:
+            retrycount -= 1
+            raise Exception(f'>>> no suitable message found, retries left: {retrycount}')
 
 # todo: move to main.py
 def connect():
