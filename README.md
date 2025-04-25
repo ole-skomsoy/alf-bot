@@ -14,3 +14,5 @@ application: https://discord.com/developers/applications/1359959433945288815/oau
 
 #### TODOS
 - choose between different bots on startup, default after x seconds
+- roterende status, [poppa en prell, slurpa ørge, henge på ruta, YÆ]
+- proper display of commands
