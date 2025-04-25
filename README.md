@@ -11,6 +11,7 @@ application: https://discord.com/developers/applications/1359959433945288815/oau
 - python 3.12.2
 - discord.py
 - discord.py[voice]
+- jsonpickle
 
 #### TODOS
 - choose between different bots on startup, default after x seconds

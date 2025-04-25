@@ -1,6 +1,7 @@
 import discord as disc
-from datetime import datetime, date
+from datetime import datetime
 import json
+import jsonpickle
 import random
 from commands import *
 
@@ -9,7 +10,7 @@ class test_bot(disc.Client):
         print(f'Logged in as {self.user}')
         await self.set_default_status()
         message = await self.get_random_message()
-        print(message) #json pls 
+        print(jsonpickle.encode(message)) #json pls 
     
     async def on_message(self, message):
         if message.author == self.user : return
@@ -21,7 +22,9 @@ class test_bot(disc.Client):
                 await self.read_messages()
     
     async def set_default_status(self):
-        await self.change_presence(activity=disc.Activity(type=disc.ActivityType.watching, name='🐶'))
+        await self.change_presence(
+            activity=disc.Activity(type=disc.ActivityType.listening, name='🤫'),
+            status=disc.Status.dnd)
         
     # 1. get random message in [created, now] (get batch)
     # 2. (todo) check if suitable
