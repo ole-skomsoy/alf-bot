@@ -33,22 +33,28 @@ class test_bot(disc.Client):
     async def post_random_message(self):
         meme_message = await self.get_random_message(10)
         return meme_message
-    
-    async def get_random_message(self, retrycount):
+
+    async def get_random_message(self, retry_count):
         channel = self.get_channel(read_secret('meme_channel'))
         around = datetime.fromtimestamp(random.randint(
                 int(channel.created_at.timestamp()), 
                 int(datetime.now().timestamp())))
-        suitable_content = ['http://', 'https://']
+        suitable_source = ['http://', 'https://']
         
-        try:
+        while retry_count > 0:
             messages = [message async for message in channel.history(around=around, limit=100)]
-            for message in messages:
-                if any(c in message for c in suitable_content):
+            
+            for message in [message async for message in channel.history(around=around, limit=100)]:
+                if any(source in message.content for source in suitable_source):
                     return message
-        except:
-            retrycount -= 1
-            raise Exception(f'>>> no suitable message found, retries left: {retrycount}')
+                
+                for attachment in message.attachments:
+                    if (any(src in attachment.url for src in suitable_source )):
+                        return message
+                    
+            retry_count -= 1
+            if retry_count <= 0 : raise Exception(f'>>> Failed to get random message ({retry_count} retries left)')
+            return messages[0]
 
 # todo: move to main.py
 def connect():
