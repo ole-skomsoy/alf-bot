@@ -1,6 +1,7 @@
 import discord as disc
 from datetime import datetime, date
 import json
+import random
 from commands import *
 
 class test_bot(disc.Client):
@@ -28,15 +29,10 @@ class test_bot(disc.Client):
     # 3. (todo) check for missing context
     async def get_random_message(self):
         channel = self.get_channel(152136089367347200)
-        print(channel.created_at)
-        print(channel.created_at.timestamp())
-        print(datetime.now().timestamp())
-        
-        # get int
-        around = range(int(channel.created_at.timestamp()), int(datetime.now().timestamp()))[0]
-        print(datetime.fromtimestamp(t))
-        
-        around = datetime(2020, 10, 21, 0, 0)
+        around = datetime.fromtimestamp(random.randint(
+                int(channel.created_at.timestamp()), 
+                int(datetime.now().timestamp())))
+    
         # messages = channel.history(around=around, limit=1)
         # numMessages = 0
         # find suitable message
