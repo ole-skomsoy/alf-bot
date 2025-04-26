@@ -9,11 +9,12 @@ from lurke_rob_cog import *
 class lurke_rob(commands.Bot):
     async def setup_hook(self):
         await self.add_cog(lurke_rob_cog(self))
+        await self.tree.sync()
 
     async def on_ready(self):
         print(f'Logged in as {self.user}')
         await self.set_default_status()
-        await self.post_daily_messages()
+        await self.tree.sync()
     
     async def on_message(self, message):
         if message.author == self.user : pass
@@ -23,22 +24,20 @@ class lurke_rob(commands.Bot):
             activity=disc.Activity(type=disc.ActivityType.listening, name='🤫'),
             status=disc.Status.dnd)
         
-    async def post_daily_messages(self):
+    async def post_random_messages(self, from_meme_channel, from_tune_channel):
         repost_channel = self.get_channel(read_secret('repost_channel'))
         
-        meme_channel = self.get_channel(read_secret('meme_channel'))
-        meme_message = await self.get_random_message(meme_channel, 10)
-        #self.log(meme_message)
+        if from_meme_channel:
+            meme_channel = self.get_channel(read_secret('meme_channel'))
+            meme_message = await self.get_random_message(meme_channel, 10)
+            daily_meme_message = await self.post_message(repost_channel, meme_message)
+            await self.react_to_message(daily_meme_message, ['🤭','😂','🤣','😆'])
         
-        tune_channel = self.get_channel(read_secret('tune_channel'))
-        tune_message = await self.get_random_message(tune_channel, 10)
-        #self.log(tune_channel)
-        
-        daily_meme_message = await self.post_message(repost_channel, meme_message)
-        await self.react_to_message(daily_meme_message, ['🤭','😂','🤣','😆'])
-        
-        daily_tune_message = await self.post_message(repost_channel, tune_message)
-        await self.react_to_message(daily_tune_message, ['🔥','🙏','😍','😤'])
+        if from_tune_channel:
+            tune_channel = self.get_channel(read_secret('tune_channel'))
+            tune_message = await self.get_random_message(tune_channel, 10)
+            daily_tune_message = await self.post_message(repost_channel, tune_message)
+            await self.react_to_message(daily_tune_message, ['🔥','🙏','😍','😤'])
 
     async def get_random_message(self, channel, retry_count):
         around = datetime.fromtimestamp(random.randint(
@@ -70,14 +69,25 @@ class lurke_rob(commands.Bot):
     def log(self, object):
         print(jsonpickle.encode(object))
         print('----------------------------------------------------------------------------')
-        
-        
-# todo: move to main.py
-def setup():
-    intents = disc.Intents.default()
-    intents.message_content = True
-    bot = lurke_rob(command_prefix='!', intents=intents)
+
+
+intents = disc.Intents.default()
+intents.message_content = True
+
+# dont bother trying to change the command prefix
+bot = lurke_rob(command_prefix='/', intents=intents)
+
+@bot.tree.command(name='get_random_meme', description = "Get a random meme from the meme channel")
+async def get_random_meme_command(ctx):
+    ctx.post_random_messages(True, False)
     
-    token = read_secret('discord_access_token')
-    bot.run(token)
-setup()
+@bot.tree.command(name='get_random_meme2', description = "Get a random tune from the tune channel")
+async def get_random_meme_command(ctx):
+    ctx.post_random_messages(False, True)
+
+token = read_secret('discord_access_token')
+bot.run(token)
+
+# bot.tree.sync()
+
+# setup()
