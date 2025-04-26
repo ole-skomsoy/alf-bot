@@ -1,25 +1,15 @@
 import discord as disc
-from discord.ext import tasks, commands
+from discord.ext import commands
 from datetime import datetime
 import jsonpickle
 import random
 from helpers import *
+from lurke_rob_cog import *
 
+class lurke_rob(commands.Bot):
+    async def setup_hook(self):
+        await self.add_cog(lurke_rob_cog(self))
 
-class lurke_rob_cog(commands.Cog):
-    def __init__(self, bot):
-        self.lurke_rob = bot
-        self.printer.start()
-
-    def cog_unload(self):
-        self.printer.cancel()
-
-    @tasks.loop(seconds=1.0)
-    async def printer(self):
-        print(111)
-
-
-class lurke_rob(disc.Client):
     async def on_ready(self):
         print(f'Logged in as {self.user}')
         await self.set_default_status()
@@ -54,8 +44,6 @@ class lurke_rob(disc.Client):
         around = datetime.fromtimestamp(random.randint(
                 int(channel.created_at.timestamp()), 
                 int(datetime.now().timestamp())))
-        print(f'> date created: {channel.created_at} ({channel.created_at.timestamp()})')
-        print(f'> date chosen: {around}')
         suitable_sources = ['http://', 'https://']
         
         while retry_count > 0:
@@ -85,11 +73,11 @@ class lurke_rob(disc.Client):
         
         
 # todo: move to main.py
-def connect():
+def setup():
     intents = disc.Intents.default()
     intents.message_content = True
-    client = lurke_rob(intents=intents)
+    bot = lurke_rob(command_prefix='!', intents=intents)
+    
     token = read_secret('discord_access_token')
-    client.run(token)
-
-connect()
+    bot.run(token)
+setup()
