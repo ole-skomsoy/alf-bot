@@ -1,0 +1,15 @@
+# from discord.ext import tasks, commands
+# from bots import lurke_rob
+
+
+# class lurke_rob_cog(commands.Cog):
+#     def __init__(self):
+#         self.lurke_rob = lurke_rob()
+
+#     def cog_unload(self):
+#         self.printer.cancel()
+
+#     @tasks.loop(seconds=5.0)
+#     async def printer(self):
+#         print(self.index)
+#         self.index += 1

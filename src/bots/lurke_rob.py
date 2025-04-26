@@ -1,11 +1,25 @@
 import discord as disc
+from discord.ext import tasks, commands
 from datetime import datetime
 import jsonpickle
 import random
-from commands import *
 from helpers import *
 
-class test_bot(disc.Client):
+
+class lurke_rob_cog(commands.Cog):
+    def __init__(self, bot):
+        self.lurke_rob = bot
+        self.printer.start()
+
+    def cog_unload(self):
+        self.printer.cancel()
+
+    @tasks.loop(seconds=1.0)
+    async def printer(self):
+        print(111)
+
+
+class lurke_rob(disc.Client):
     async def on_ready(self):
         print(f'Logged in as {self.user}')
         await self.set_default_status()
@@ -13,10 +27,6 @@ class test_bot(disc.Client):
     
     async def on_message(self, message):
         if message.author == self.user : pass
-        for command in commands:
-            if message.content.startswith(command):
-                await message.channel.send(commands[command])
-                break
     
     async def set_default_status(self):
         await self.change_presence(
@@ -44,11 +54,15 @@ class test_bot(disc.Client):
         around = datetime.fromtimestamp(random.randint(
                 int(channel.created_at.timestamp()), 
                 int(datetime.now().timestamp())))
+        print(f'> date created: {channel.created_at} ({channel.created_at.timestamp()})')
+        print(f'> date chosen: {around}')
         suitable_sources = ['http://', 'https://']
         
         while retry_count > 0:
             messages = [message async for message in channel.history(around=around, limit=100)]
-            for message in [message async for message in channel.history(around=around, limit=100)]:
+            random.shuffle(messages)
+
+            for message in messages:
                 if any(source in message.content for source in suitable_sources):
                     return message
                 
@@ -58,7 +72,6 @@ class test_bot(disc.Client):
                     
             retry_count -= 1
             if retry_count <= 0 : raise Exception(f'>>> Failed to get random message ({retry_count} retries left)')
-            return messages[0]
 
     async def post_message(self, channel, message):
         return await message.forward(channel)
@@ -75,7 +88,7 @@ class test_bot(disc.Client):
 def connect():
     intents = disc.Intents.default()
     intents.message_content = True
-    client = test_bot(intents=intents)
+    client = lurke_rob(intents=intents)
     token = read_secret('discord_access_token')
     client.run(token)
 
