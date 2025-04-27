@@ -52,7 +52,7 @@ class lurke_rob(commands.Bot):
                     return message
                 
                 for attachment in message.attachments:
-                    if (any(source in attachment.url for source in suitable_sources )):
+                    if (any(source in attachment.url for source in suitable_sources)):
                         return message
                     
             retry_count -= 1
