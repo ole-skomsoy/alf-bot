@@ -13,7 +13,6 @@ class lurke_rob(commands.Bot):
     async def on_ready(self):
         print(f'Logged in as {self.user}')
         await self.set_default_status()
-        # await self.tree.sync()
     
     async def on_message(self, message):
         if message.author == self.user : pass
@@ -78,15 +77,18 @@ bot = lurke_rob(command_prefix='/', intents=intents)
 
 @bot.tree.command(name='lr_get_random_meme', description = "Get a random meme from the meme channel")
 async def get_random_meme_command(ctx):
-    ctx.post_random_messages(True, False)
+    await bot.post_random_messages(True, False)
+    await ctx.response.send_message(content='member?', delete_after=3.0)
     
 @bot.tree.command(name='lr_get_random_tune', description = "Get a random tune from the tune channel")
 async def get_random_meme_command(ctx):
-    ctx.post_random_messages(False, True)
+    await bot.post_random_messages(False, True)
+    await ctx.response.send_message(content='member?', delete_after=3.0)
 
 @bot.tree.command(name='lr_sync_commands', description = "Sync commands between client and server")
 async def sync_commands(ctx):
-    await ctx.tree.sync()
+    await bot.tree.sync()
+    await ctx.response.send_message(content='syncing commands', delete_after=3.0)
 
 token = read_secret('discord_access_token')
 bot.run(token)
