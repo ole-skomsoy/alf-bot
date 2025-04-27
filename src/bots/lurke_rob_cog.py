@@ -1,15 +1,16 @@
-import discord as disc
 from discord.ext import tasks, commands
+import datetime
 from helpers import *
 
 class lurke_rob_cog(commands.Cog):
     def __init__(self, bot):
         self.lurke_rob = bot
-        self.printer.start()
+        self.daily_scheduler.start()
 
     def cog_unload(self):
-        self.printer.cancel()
+        self.daily_scheduler.cancel()
 
-    @tasks.loop(seconds=1.0)
-    async def printer(self):
-        print(111)
+    @tasks.loop(time = datetime.time(hour=2, minute=7, tzinfo=datetime.timezone.utc))
+    async def daily_scheduler(self):
+        print('>>> posting daily messages')
+        await self.lurke_rob.post_random_messages(True, True)

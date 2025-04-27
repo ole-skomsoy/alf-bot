@@ -1,6 +1,6 @@
 import discord as disc
 from discord.ext import commands
-from datetime import datetime
+import datetime
 import jsonpickle
 import random
 from helpers import *
@@ -9,12 +9,11 @@ from lurke_rob_cog import *
 class lurke_rob(commands.Bot):
     async def setup_hook(self):
         await self.add_cog(lurke_rob_cog(self))
-        await self.tree.sync()
 
     async def on_ready(self):
         print(f'Logged in as {self.user}')
         await self.set_default_status()
-        await self.tree.sync()
+        # await self.tree.sync()
     
     async def on_message(self, message):
         if message.author == self.user : pass
@@ -40,9 +39,9 @@ class lurke_rob(commands.Bot):
             await self.react_to_message(daily_tune_message, ['🔥','🙏','😍','😤'])
 
     async def get_random_message(self, channel, retry_count):
-        around = datetime.fromtimestamp(random.randint(
+        around = datetime.datetime.fromtimestamp(random.randint(
                 int(channel.created_at.timestamp()), 
-                int(datetime.now().timestamp())))
+                int(datetime.datetime.now().timestamp())))
         suitable_sources = ['http://', 'https://']
         
         while retry_count > 0:
@@ -77,17 +76,17 @@ intents.message_content = True
 # dont bother trying to change the command prefix
 bot = lurke_rob(command_prefix='/', intents=intents)
 
-@bot.tree.command(name='get_random_meme', description = "Get a random meme from the meme channel")
+@bot.tree.command(name='lr_get_random_meme', description = "Get a random meme from the meme channel")
 async def get_random_meme_command(ctx):
     ctx.post_random_messages(True, False)
     
-@bot.tree.command(name='get_random_meme2', description = "Get a random tune from the tune channel")
+@bot.tree.command(name='lr_get_random_tune', description = "Get a random tune from the tune channel")
 async def get_random_meme_command(ctx):
     ctx.post_random_messages(False, True)
 
+@bot.tree.command(name='lr_sync_commands', description = "Sync commands between client and server")
+async def sync_commands(ctx):
+    await ctx.tree.sync()
+
 token = read_secret('discord_access_token')
 bot.run(token)
-
-# bot.tree.sync()
-
-# setup()
