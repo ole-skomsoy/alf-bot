@@ -14,7 +14,6 @@ class lurke_rob(commands.Bot):
     async def on_ready(self):
         print(f'Logged in as {self.user}')
         await self.set_default_status()
-        await self.post_random_messages(True, False, False)
     
     async def on_message(self, message):
         if message.author == self.user : pass
