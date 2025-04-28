@@ -58,28 +58,10 @@ class lurke_rob(commands.Bot):
         except:
             print('>>> error getting random cat')            
     
-    # https://discord.com/developers/embeds?url=https%253A%252F%252Fcataas.com%252Fcat
     async def send_quote_message(self, channel, quote, cat):
-        
         embed = disc.Embed(title=quote['a'], description=quote['q'], type='image')
         embed = embed.set_image(url=cat['url'])
         return await channel.send(embed=embed)
-        
-        # embed = embed.set_thumbnail(url='https://cataas.com/cat')
-        # embed = embed.set_author(name='cat_author', url='https://cataas.com/cat')
-
-        # return await channel.send(embed={
-        #     "type": "image",
-        #     "url": "https://cataas.com/cat",
-        #     "thumbnail": {
-        #         "url": "https://cataas.com/cat",
-        #         "proxy_url": "https://images-ext-1.discordapp.net/external/aWkbTEJ28MKA4B0SP4kI4yQaMhGERKYVU4rwHsKAXbo/https/cataas.com/cat",
-        #         "width": 800,
-        #         "height": 600,
-        #         "placeholder": "1SgKFYIFpYlYiWZhiRaKt9CEJQ5J",
-        #         "placeholder_version": 1,
-        #         "flags": 0}
-        # })
 
     async def get_random_message(self, channel, retry_count):
         around = datetime.datetime.fromtimestamp(random.randint(
