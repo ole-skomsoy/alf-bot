@@ -6,6 +6,7 @@ application: https://discord.com/developers/applications/1359959433945288815/oau
 #### links
 
 - https://discordpy.readthedocs.io/en/stable/intro.html
+- https://docs.zenquotes.io/zenquotes-documentation/
 
 #### packages
 - python 3.12.2 
