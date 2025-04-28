@@ -13,4 +13,4 @@ class lurke_rob_cog(commands.Cog):
     @tasks.loop(time = datetime.time(hour=10, minute=0, tzinfo=datetime.timezone.utc))
     async def daily_scheduler(self):
         print('>>> posting daily messages')
-        await self.lurke_rob.post_random_messages(True, True)
+        await self.lurke_rob.post_random_messages(True, True, True)

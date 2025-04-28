@@ -121,12 +121,12 @@ bot = lurke_rob(command_prefix='/', intents=intents)
 
 @bot.tree.command(name='lr_get_random_tune', description = "Get a random tune from the tune channel")
 async def get_random_meme_command(ctx):
-    await bot.post_random_messages(True, False)
+    await bot.post_random_messages(False, True, False)
     await ctx.response.send_message(content='member?', delete_after=3.0)
 
 @bot.tree.command(name='lr_get_random_meme', description = "Get a random meme from the meme channel")
 async def get_random_meme_command(ctx):
-    await bot.post_random_messages(False, True)
+    await bot.post_random_messages(False, False, True)
     await ctx.response.send_message(content='member?', delete_after=3.0)
 
 @bot.tree.command(name='lr_sync_commands', description = "Sync commands between client and server")
