@@ -8,6 +8,10 @@ from helpers import *
 from lurke_rob_cog import *
 
 class lurke_rob(commands.Bot):
+    quote_reactions = ['😺','😸','😹','😻','😼','😽','🙀','😿','😾']
+    tune_reactions = ['🔥','🙏','😍','😤']
+    meme_reactions = ['🤭','😂','🤣','😆']
+    
     async def setup_hook(self):
         await self.add_cog(lurke_rob_cog(self))
 
@@ -16,7 +20,7 @@ class lurke_rob(commands.Bot):
         await self.set_default_status()
     
     async def on_message(self, message):
-        if message.author == self.user : pass
+        await self.react_if_interesting_message(message)
     
     async def set_default_status(self):
         await self.change_presence(
@@ -30,19 +34,19 @@ class lurke_rob(commands.Bot):
             quote_message = self.get_random_quote()
             cat = self.get_random_cat()
             daily_quote_message = await self.send_quote_message(repost_channel, quote_message, cat)
-            await self.react_to_message(daily_quote_message, ['😺','😸','😹','😻','😼','😽','🙀','😿','😾'])
+            await self.react_to_message(daily_quote_message, self.quote_reactions)
             
         if from_tune_channel:
             tune_channel = self.get_channel(read_secret('tune_channel'))
             tune_message = await self.get_random_message(tune_channel, 10)
             daily_tune_message = await self.forward_message(repost_channel, tune_message)
-            await self.react_to_message(daily_tune_message, ['🔥','🙏','😍','😤'])
+            await self.react_to_message(daily_tune_message, self.tune_reactions)
             
         if from_meme_channel:
             meme_channel = self.get_channel(read_secret('meme_channel'))
             meme_message = await self.get_random_message(meme_channel, 10)
             daily_meme_message = await self.forward_message(repost_channel, meme_message)
-            await self.react_to_message(daily_meme_message, ['🤭','😂','🤣','😆'])
+            await self.react_to_message(daily_meme_message, self.meme_reactions)
 
     def get_random_quote(self):
         try:
@@ -66,25 +70,38 @@ class lurke_rob(commands.Bot):
         around = datetime.datetime.fromtimestamp(random.randint(
                 int(channel.created_at.timestamp()), 
                 int(datetime.datetime.now().timestamp())))
-        suitable_sources = ['http://', 'https://']
         
         while retry_count > 0:
-            messages = [message async for message in channel.history(around=around, limit=100)]
+            messages = [message async for message in channel.history(around=around, limit=3)]
             random.shuffle(messages)
-
+            
             for message in messages:
-                if any(source in message.content for source in suitable_sources):
-                    return message
+                if self.is_ext_content_message(message) : return message
                 
-                for attachment in message.attachments:
-                    if (any(source in attachment.url for source in suitable_sources)):
-                        return message
-                    
             retry_count -= 1
             if retry_count <= 0 : raise Exception(f'>>> Failed to get random message ({retry_count} retries left)')
 
+    def is_ext_content_message(self, message):
+        suitable_sources = ['http://', 'https://']
+        if any(source in message.content for source in suitable_sources):
+                    return True
+        for attachment in message.attachments:
+            if (any(source in attachment.url for source in suitable_sources)):
+                return True
+        return False
+
     async def forward_message(self, channel, message):
         return await message.forward(channel)
+    
+    async def react_if_interesting_message(self, message):
+        if message.author == self.user : return
+        if not self.is_ext_content_message(message) : return
+        
+        if message.channel.id == read_secret('tune_channel'):
+            await self.react_to_message(message, self.tune_reactions)
+        
+        if message.channel.id == read_secret('meme_channel'):
+            await self.react_to_message(message, self.meme_reactions)
     
     async def react_to_message(self, message, reactions):
         await message.add_reaction(random.choice(reactions))
