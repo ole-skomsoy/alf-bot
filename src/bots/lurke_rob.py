@@ -27,15 +27,9 @@ class lurke_rob(commands.Bot):
             activity=disc.Activity(type=disc.ActivityType.listening, name='🤫'),
             status=disc.Status.dnd)
         
-    async def post_random_messages(self, from_quote_api, from_tune_channel, from_meme_channel):
+    async def post_random_messages(self, from_tune_channel, from_meme_channel, from_quote_api):
         repost_channel = self.get_channel(read_secret('repost_channel'))
         
-        if from_quote_api:
-            quote_message = self.get_random_quote()
-            cat = self.get_random_cat()
-            daily_quote_message = await self.send_quote_message(repost_channel, quote_message, cat)
-            await self.react_to_message(daily_quote_message, self.quote_reactions)
-            
         if from_tune_channel:
             tune_channel = self.get_channel(read_secret('tune_channel'))
             tune_message = await self.get_random_message(tune_channel, 10)
@@ -47,6 +41,12 @@ class lurke_rob(commands.Bot):
             meme_message = await self.get_random_message(meme_channel, 10)
             daily_meme_message = await self.forward_message(repost_channel, meme_message)
             await self.react_to_message(daily_meme_message, self.meme_reactions)
+        
+        if from_quote_api:
+            quote_message = self.get_random_quote()
+            cat = self.get_random_cat()
+            daily_quote_message = await self.send_quote_message(repost_channel, quote_message, cat)
+            await self.react_to_message(daily_quote_message, self.quote_reactions)
 
     def get_random_quote(self):
         try:
@@ -119,12 +119,12 @@ bot = lurke_rob(command_prefix='/', intents=intents)
 
 @bot.tree.command(name='lr_get_random_tune', description = "Get a random tune from the tune channel")
 async def get_random_meme_command(ctx):
-    await bot.post_random_messages(False, True, False)
+    await bot.post_random_messages(True, False, False)
     await ctx.response.send_message(content='member?', delete_after=3.0)
 
 @bot.tree.command(name='lr_get_random_meme', description = "Get a random meme from the meme channel")
 async def get_random_meme_command(ctx):
-    await bot.post_random_messages(False, False, True)
+    await bot.post_random_messages(False, True, False)
     await ctx.response.send_message(content='member?', delete_after=3.0)
 
 @bot.tree.command(name='lr_sync_commands', description = "Sync commands between client and server")
