@@ -72,7 +72,7 @@ class lurke_rob(commands.Bot):
                 int(datetime.datetime.now().timestamp())))
         
         while retry_count > 0:
-            messages = [message async for message in channel.history(around=around, limit=3)]
+            messages = [message async for message in channel.history(around=around, limit=100)]
             random.shuffle(messages)
             
             for message in messages:
