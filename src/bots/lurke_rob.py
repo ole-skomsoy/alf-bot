@@ -132,5 +132,5 @@ async def sync_commands(ctx):
     await bot.tree.sync()
     await ctx.response.send_message(content='syncing commands', delete_after=3.0)
 
-token = read_secret('discord_access_token')
+token = read_secret('lurke_rob_access_token')
 bot.run(token)
