@@ -2,6 +2,7 @@ import discord as disc
 from discord.ext import commands
 import jsonpickle
 import asyncio
+import os, random
 from helpers import *
 
 class spooky_rob(commands.Bot):
@@ -37,8 +38,7 @@ class spooky_rob(commands.Bot):
     
     async def play_random_sound(self):
         voice_client = disc.utils.get(self.voice_clients)
-        await asyncio.sleep(1)                
-        voice_client.play(disc.FFmpegPCMAudio(source='C:/Code/alf-bot/src/bots/sounds/sr_2.mp3'), after=lambda e: print('done', e))
+        voice_client.play(disc.FFmpegPCMAudio(source=f'C:/Code/alf-bot/src/bots/sounds/sr_{random.randint(0,1)}.mp3'), after=lambda e: print('done', e))
         while voice_client.is_playing():
             await asyncio.sleep(1)
         voice_client.stop()
