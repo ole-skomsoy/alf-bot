@@ -1,7 +1,7 @@
 import discord as disc
 from discord.ext import commands
-import datetime
 import jsonpickle
+import asyncio
 from helpers import *
 
 class spooky_rob(commands.Bot):
@@ -13,10 +13,10 @@ class spooky_rob(commands.Bot):
         await self.change_presence(
             activity=disc.Activity(type=disc.ActivityType.listening, name='🙃'),
             status=disc.Status.dnd)
-        
+    
+    # https://stackoverflow.com/questions/58445223/discord-py-bot-doesnt-play-any-mp3-file
+    # casette player; https://github.com/Rapptz/discord.py/blob/master/examples/basic_voice.py
     async def on_voice_state_update(self, member, before, after):
-        #self.log(before)
-        #self.log(after)
         voice_channel = self.get_channel(read_secret('spooky_channel'))
         
         if len(voice_channel.members) == 1 and voice_channel.members[0].id == read_secret('spooky_rob_id'):
@@ -29,11 +29,20 @@ class spooky_rob(commands.Bot):
         if after.channel and after.channel.id == read_secret('spooky_channel'):
             try:
                 await voice_channel.connect()
+                await self.play_random_sound()
             except disc.ClientException:
                 self.log("Already connected to a voice channel")
             except Exception as e:
                 self.log(f"Error connecting to voice channel: {e}")
-        
+    
+    async def play_random_sound(self):
+        voice_client = disc.utils.get(self.voice_clients)
+        await asyncio.sleep(1)                
+        voice_client.play(disc.FFmpegPCMAudio(source='C:/Code/alf-bot/src/bots/sounds/sr_2.mp3'), after=lambda e: print('done', e))
+        while voice_client.is_playing():
+            await asyncio.sleep(1)
+        voice_client.stop()
+    
     def log(self, object):
         print(jsonpickle.encode(object))
         print('----------------------------------------------------------------------------')
