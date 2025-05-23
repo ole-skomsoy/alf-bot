@@ -15,3 +15,4 @@ spooky_rob: https://discord.com/developers/applications/1375125613312081992/oaut
 - discord.py[voice]
 - jsonpickle
 - requests
+- PyNaCl
