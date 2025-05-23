@@ -17,32 +17,32 @@ class spooky_rob_cog(commands.Cog):
     def cog_unload(self):
         self.schedule_0.cancel()
 
-    @tasks.loop(seconds = 5.0)
+    @tasks.loop(minutes = 5.0)
     async def schedule_0(self):
         if random.randint(0,5) != 0 : return
         await self.spooky_rob.play_random_sound()
         
-    @tasks.loop(seconds = 10.0)
+    @tasks.loop(minutes = 10.0)
     async def schedule_1(self):
         if random.randint(0,5) != 1 : return
         await self.spooky_rob.play_random_sound()
         
-    @tasks.loop(seconds = 15.0)
+    @tasks.loop(minutes = 15.0)
     async def schedule_2(self):
         if random.randint(0,5) != 2 : return
         await self.spooky_rob.play_random_sound()
         
-    @tasks.loop(seconds = 20.0)
+    @tasks.loop(minutes = 20.0)
     async def schedule_3(self):
         if random.randint(0,5) != 3 : return
         await self.spooky_rob.play_random_sound()
     
-    @tasks.loop(seconds = 25.0)
+    @tasks.loop(minutes = 25.0)
     async def schedule_4(self):
         if random.randint(0,5) != 4 : return
         await self.spooky_rob.play_random_sound()
         
-    @tasks.loop(seconds = 30.0)
+    @tasks.loop(minutes = 30.0)
     async def schedule_5(self):
         if random.randint(0,5) != 5 : return
         await self.spooky_rob.play_random_sound()

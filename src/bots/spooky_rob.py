@@ -40,7 +40,6 @@ class spooky_rob(commands.Bot):
     
     # /home/pi/code/alf-bot/src/bots/sounds
     async def play_random_sound(self):
-        print('>>> PLAYING RANDOM SOUND')
         voice_client = disc.utils.get(self.voice_clients)
         if not voice_client or voice_client.is_playing() : return
         try:
