@@ -16,7 +16,7 @@ class spooky_rob(commands.Bot):
         
     async def set_default_status(self):
         await self.change_presence(
-            activity=disc.Activity(type=disc.ActivityType.listening, name='🙃'),
+            activity=disc.Activity(type=disc.ActivityType.watching, name='you'),
             status=disc.Status.dnd)
     
     async def on_voice_state_update(self, member, before, after):

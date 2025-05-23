@@ -24,7 +24,7 @@ class lurke_rob(commands.Bot):
     
     async def set_default_status(self):
         await self.change_presence(
-            activity=disc.Activity(type=disc.ActivityType.listening, name='🤫'),
+            activity=disc.Activity(type=disc.ActivityType.watching, name='you'),
             status=disc.Status.dnd)
         
     async def post_random_messages(self, from_tune_channel, from_meme_channel, from_quote_api):
