@@ -70,6 +70,8 @@ class spooky_rob(commands.Bot):
     
     async def on_voice_state_update(self, member, before, after):
         voice_channel = self.get_channel(read_secret('spooky_channel'))
+        if member.id == read_secret('spooky_rob_id') and not after.channel:
+                await self.set_default_status()
         
         if len(voice_channel.members) == 1 and voice_channel.members[0].id == read_secret('spooky_rob_id'):
             try:
@@ -101,7 +103,9 @@ class spooky_rob(commands.Bot):
     
     async def play_yt(self, url):
         voice_client = disc.utils.get(self.voice_clients)
-        if not voice_client or voice_client.is_playing() : return
+        if not voice_client : return
+        if voice_client.is_playing():
+            voice_client.stop()
         
         player = await YTDLSource.from_url(url, loop=self.loop)
         await self.set_listening_status(player.title)
@@ -109,7 +113,9 @@ class spooky_rob(commands.Bot):
     
     async def stream_yt(self, url):
         voice_client = disc.utils.get(self.voice_clients)
-        if not voice_client or voice_client.is_playing() : return
+        if not voice_client : return
+        if voice_client.is_playing():
+            voice_client.stop()
         
         player = await YTDLSource.from_url(url, loop=self.loop, stream=True)
         await self.set_listening_status(player.title)
@@ -140,58 +146,58 @@ async def sync_commands(ctx):
 
 @bot.tree.command(name='sr_play', description = "Play audio from youtube")
 async def sr_play_yt(ctx, url:str):
-    await ctx.response.send_message(content='Gimme a moment... (ignore error)', delete_after=3.0)
+    await ctx.response.send_message(content='Gimme a moment...', delete_after=5.0)
     await bot.play_yt(url)
     
 @bot.tree.command(name='sr_stream', description = "Stream audio from youtube")
 async def sr_play_yt(ctx, url:str):
-    await ctx.response.send_message(content='Gimme a moment... (ignore error)', delete_after=3.0)
+    await ctx.response.send_message(content='Gimme a moment...', delete_after=5.0)
     await bot.stream_yt(url)
     
 @bot.tree.command(name='sr_stop', description = "Stop the currently playing audio")
 async def sr_stop_audio(ctx):
-    await ctx.response.send_message(content='Gimme a moment... (ignore error)', delete_after=1.0)
+    await ctx.response.send_message(content='Gimme a moment...', delete_after=1.0)
     bot.sr_stop_audio()
     
 @bot.tree.command(name='sr_cassette_1', description = "Play cassette #1")
 async def sr_play_yt(ctx):
-    await ctx.response.send_message(content='Gimme a moment... (ignore error)', delete_after=3.0)
+    await ctx.response.send_message(content='Gimme a moment...', delete_after=5.0)
     await bot.play_yt('https://www.youtube.com/watch?v=qWpt-_Dk4OA&ab_channel=GabeCastro')
 
 @bot.tree.command(name='sr_cassette_2', description = "Play cassette #2")
 async def sr_play_yt(ctx):
-    await ctx.response.send_message(content='Gimme a moment... (ignore error)', delete_after=3.0)
+    await ctx.response.send_message(content='Gimme a moment...', delete_after=5.0)
     await bot.play_yt('https://www.youtube.com/watch?v=M7y2YHa9Jcg&list=PLFcrLZcXktso9Jz-wWRaYwwkxjPLOtwIq&index=2&ab_channel=GabeCastro')
     
 @bot.tree.command(name='sr_cassette_3', description = "Play cassette #3")
 async def sr_play_yt(ctx):
-    await ctx.response.send_message(content='Gimme a moment... (ignore error)', delete_after=3.0)
+    await ctx.response.send_message(content='Gimme a moment...', delete_after=5.0)
     await bot.play_yt('https://www.youtube.com/watch?v=HJBHsdVp75M&list=PLFcrLZcXktso9Jz-wWRaYwwkxjPLOtwIq&index=3&ab_channel=GabeCastro')
     
 @bot.tree.command(name='sr_cassette_4', description = "Play cassette #4")
 async def sr_play_yt(ctx):
-    await ctx.response.send_message(content='Gimme a moment... (ignore error)', delete_after=3.0)
-    await ctx.play_yt('https://www.youtube.com/watch?v=SfkfRW_ufMo&list=PLFcrLZcXktso9Jz-wWRaYwwkxjPLOtwIq&index=4&ab_channel=GabeCastro')
+    await ctx.response.send_message(content='Gimme a moment...', delete_after=5.0)
+    await bot.play_yt('https://www.youtube.com/watch?v=SfkfRW_ufMo&list=PLFcrLZcXktso9Jz-wWRaYwwkxjPLOtwIq&index=4&ab_channel=GabeCastro')
     
 @bot.tree.command(name='sr_cassette_5', description = "Play cassette #5")
 async def sr_play_yt(ctx):
-    await ctx.response.send_message(content='Gimme a moment... (ignore error)', delete_after=3.0)
+    await ctx.response.send_message(content='Gimme a moment...', delete_after=5.0)
     await bot.play_yt('https://www.youtube.com/watch?v=Aj4YGcy5Yk4&list=PLFcrLZcXktso9Jz-wWRaYwwkxjPLOtwIq&index=5&ab_channel=GabeCastro')
 
 @bot.tree.command(name='sr_cassette_6', description = "Play cassette #6")
 async def sr_play_yt(ctx):
-    await ctx.response.send_message(content='Gimme a moment... (ignore error)', delete_after=3.0)
+    await ctx.response.send_message(content='Gimme a moment...', delete_after=5.0)
     await bot.play_yt('https://www.youtube.com/watch?v=3iONFj3dTbI&list=PLFcrLZcXktso9Jz-wWRaYwwkxjPLOtwIq&index=6&ab_channel=GabeCastro')
     
 @bot.tree.command(name='sr_cassette_7', description = "Play cassette #7")
 async def sr_play_yt(ctx):
-    await ctx.response.send_message(content='Gimme a moment... (ignore error)', delete_after=3.0)
-    await ctx.play_yt('https://www.youtube.com/watch?v=MKKLwahE_J8&list=PLFcrLZcXktso9Jz-wWRaYwwkxjPLOtwIq&index=7&ab_channel=GabeCastro')
+    await ctx.response.send_message(content='Gimme a moment...', delete_after=5.0)
+    await bot.play_yt('https://www.youtube.com/watch?v=MKKLwahE_J8&list=PLFcrLZcXktso9Jz-wWRaYwwkxjPLOtwIq&index=7&ab_channel=GabeCastro')
 
 @bot.tree.command(name='sr_cassette_8', description = "Play cassette #8")
 async def sr_play_yt(ctx):
-    await ctx.response.send_message(content='Gimme a moment... (ignore error)', delete_after=3.0)
-    await ctx.play_yt('https://www.youtube.com/watch?v=u22lVpauhRI&list=PLFcrLZcXktso9Jz-wWRaYwwkxjPLOtwIq&index=8&ab_channel=GabeCastro')
+    await ctx.response.send_message(content='Gimme a moment...', delete_after=5.0)
+    await bot.play_yt('https://www.youtube.com/watch?v=u22lVpauhRI&list=PLFcrLZcXktso9Jz-wWRaYwwkxjPLOtwIq&index=8&ab_channel=GabeCastro')
 
 token = read_secret('spooky_rob_access_token')
 bot.run(token)
