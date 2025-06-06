@@ -4,13 +4,14 @@ import datetime
 import requests
 import jsonpickle
 import random
+import comics
 from helpers import *
 from lurke_rob_cog import *
 
 class lurke_rob(commands.Bot):
     quote_reactions = ['😺','😸','😹','😻','😼','😽','🙀','😿','😾']
     tune_reactions = ['🔥','🙏','😍','😤']
-    meme_reactions = ['🤭','😂','🤣','😆']
+    meme_reactions = ['🤭','😂','🤣','😆'] 
     
     async def setup_hook(self):
         await self.add_cog(lurke_rob_cog(self))
@@ -18,7 +19,7 @@ class lurke_rob(commands.Bot):
     async def on_ready(self):
         print(f'Logged in as {self.user}')
         await self.set_default_status()
-    
+
     async def on_message(self, message):
         await self.react_if_interesting_message(message)
     
@@ -27,7 +28,7 @@ class lurke_rob(commands.Bot):
             activity=disc.Activity(type=disc.ActivityType.watching, name='you'),
             status=disc.Status.dnd)
         
-    async def post_random_messages(self, from_tune_channel, from_meme_channel, from_quote_api):
+    async def post_random_messages(self, from_tune_channel, from_meme_channel, from_quote_api, from_comic_api):
         repost_channel = self.get_channel(read_secret('repost_channel'))
         
         if from_tune_channel:
@@ -42,16 +43,25 @@ class lurke_rob(commands.Bot):
             daily_meme_message = await self.forward_message(repost_channel, meme_message)
             await self.react_to_message(daily_meme_message, self.meme_reactions)
         
+        if from_comic_api:
+            daily_comic_message = await self.send_comic_message(repost_channel)
+            await self.react_to_message(daily_comic_message, self.meme_reactions) 
+            
         if from_quote_api:
             quote_message = self.get_random_quote()
             cat = self.get_random_cat()
             daily_quote_message = await self.send_quote_message(repost_channel, quote_message, cat)
             await self.react_to_message(daily_quote_message, self.quote_reactions)
+    
+    async def send_comic_message(self, channel):
+        comic = comics.search('calvinandhobbes', date='random')
+        comic.download()
+        file = disc.File('./calvinandhobbes.png', filename="calvinandhobbes.png")
+        return await channel.send(file=file)
 
     def get_random_quote(self):
         try:
             return requests.get(f'{read_secret('quote_api')}/random').json()[0]
-            # return {"q": "You are what you believe yourself to be.", "a": "Paulo Coelho", "h": "<blockquote>&ldquo;You are what you believe yourself to be.&rdquo; &mdash; <footer>Paulo Coelho</footer></blockquote>"}
         except:
             print('>>> error getting random quote')
     
@@ -59,7 +69,7 @@ class lurke_rob(commands.Bot):
         try:
             return requests.get(f'{read_secret('cat_api')}/cat?json=true').json()
         except:
-            print('>>> error getting random cat')            
+            print('>>> error getting random cat')                      
     
     async def send_quote_message(self, channel, quote, cat):
         embed = disc.Embed(title=quote['a'], description=quote['q'], type='image')
@@ -119,12 +129,12 @@ bot = lurke_rob(command_prefix='/', intents=intents)
 
 @bot.tree.command(name='lr_get_random_tune', description = "Get a random tune from the tune channel")
 async def get_random_meme_command(ctx):
-    await bot.post_random_messages(True, False, False)
+    await bot.post_random_messages(True, False, False, False)
     await ctx.response.send_message(content='member?', delete_after=3.0)
 
 @bot.tree.command(name='lr_get_random_meme', description = "Get a random meme from the meme channel")
 async def get_random_meme_command(ctx):
-    await bot.post_random_messages(False, True, False)
+    await bot.post_random_messages(False, True, False, False)
     await ctx.response.send_message(content='member?', delete_after=3.0)
 
 @bot.tree.command(name='lr_sync_commands', description = "Sync commands between client and server")

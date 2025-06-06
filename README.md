@@ -17,3 +17,4 @@ spooky_rob: https://discord.com/developers/applications/1375125613312081992/oaut
 - requests
 - PyNaCl
 - youtube_dl (sudo pip install --upgrade --force-reinstall "git+https://github.com/ytdl-org/youtube-dl.git")
+- comics
