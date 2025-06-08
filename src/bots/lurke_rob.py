@@ -7,6 +7,8 @@ import random
 import comics
 from helpers import *
 from lurke_rob_cog import *
+from solo_que_rob_cog import *
+from riot_wrapper import *
 
 class lurke_rob(commands.Bot):
     quote_reactions = ['😺','😸','😹','😻','😼','😽','🙀','😿','😾']
@@ -15,6 +17,8 @@ class lurke_rob(commands.Bot):
     
     async def setup_hook(self):
         await self.add_cog(lurke_rob_cog(self))
+        await self.add_cog(solo_que_rob_cog(self))
+        self.riot_wrapper = riot_wrapper()
 
     async def on_ready(self):
         print(f'Logged in as {self.user}')
@@ -71,6 +75,10 @@ class lurke_rob(commands.Bot):
         except:
             print('>>> error getting random cat')                      
     
+    def check_in_game(self):
+        accounts = riot_wrapper.get_account_dtos()
+        a = 2
+    
     async def send_quote_message(self, channel, quote, cat):
         embed = disc.Embed(title=quote['a'], description=quote['q'], type='image')
         embed = embed.set_image(url=cat['url'])
@@ -115,6 +123,9 @@ class lurke_rob(commands.Bot):
     
     async def react_to_message(self, message, reactions):
         await message.add_reaction(random.choice(reactions))
+
+
+    
 
     def log(self, object):
         print(jsonpickle.encode(object))
