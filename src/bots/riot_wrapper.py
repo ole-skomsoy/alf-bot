@@ -9,7 +9,6 @@ try:
     RIOT_IDS = read_section_secret('riot', 'riot_ids')
     USER_REGION = read_section_secret('riot', 'user_region')
     WIDE_REGION = read_section_secret('riot', 'wide_region')
-    DATA_FILE = read_section_secret('riot', 'data_file')
 except KeyError as e:
     print(e, "must be specified in config [riot] section")
     exit(1)
@@ -42,22 +41,19 @@ class riot_wrapper():
     def get_active_game(account, summoner, data):
         puuid = summoner['puuid']
         username = f"**{account['gameName']}** #{account['tagLine']}"
+        
         active_games_url = f"https://{USER_REGION}.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/{puuid}"
         response = requests.get(active_games_url, headers={'X-Riot-Token': RIOT_API_KEY})
         current_game_info = response.json()
         
-        if response.status_code == 404:
-            print("Currently not in game")
-            return
-        if not response:
-            raise Exception("Could not get active game", current_game_info)
+        if response.status_code == 404 : return
+        if not response : raise Exception("Could not get active game", current_game_info)
         
         current_game = str(current_game_info['gameId'])
-        previous_game = data['in_game']
-        if previous_game == current_game:
-            print(f"In the same game (ID: {current_game})")
-            return
+        previous_game = data[puuid]['in_game']
+        if previous_game == current_game : return
         
+        current_game = str(current_game_info['gameId'])
         today = datetime.datetime.now()
         midnight = datetime.datetime(today.year, today.month, today.day, tzinfo=datetime.timezone.utc)
         midnight_epoch = int(midnight.timestamp())
@@ -68,20 +64,19 @@ class riot_wrapper():
         response = requests.get(matches_by_puuid_url, params={'startTime': midnight_epoch}, headers={'X-Riot-Token': RIOT_API_KEY})
         matches_dto = response.json()
         
-        if not response:
-            raise Exception("Could not get match history", matches_dto)
+        if not response: raise Exception("Could not get match history", matches_dto)
         matches_today = len(matches_dto)
         
         response = requests.get(matches_by_puuid_url, params={'startTime': day_ago_epoch}, headers={'X-Riot-Token': RIOT_API_KEY})
         matches_dto = response.json()
-        if not response:
-            raise Exception("Could not get match history", matches_dto)
+        
+        if not response: raise Exception("Could not get match history", matches_dto)
         matches_past_24h = len(matches_dto)
         
         message = f"{username} started a new game (ID: {current_game})"
-        data['in_game'] = str(current_game)
         print(message)
         
+        data['in_game'] = str(current_game)
         return {'embeds': [
             {
                 "title": username,
@@ -99,3 +94,113 @@ class riot_wrapper():
                 },
             },
         ]}
+        
+    def get_game_result(account, summoner, data):
+        puuid = summoner['puuid']
+        username = f"**{account['gameName']}** #{account['tagLine']}"
+        summoner_eid = summoner['id']
+        last_match = data['last_match']
+        
+        matches_by_puuid_url = f"https://{WIDE_REGION}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids"
+        response = requests.get(matches_by_puuid_url, params={'count': 1}, headers={'X-Riot-Token': RIOT_API_KEY})
+        matches_dto = response.json()
+        
+        if not response : raise Exception("Could not get match history", matches_dto)
+        if not matches_dto : return
+        
+        match = matches_dto[0]
+        if match == last_match : return
+        
+        match_by_id_url = f"https://{WIDE_REGION}.api.riotgames.com/lol/match/v5/matches/{match}"
+        response = requests.get(match_by_id_url, headers={'X-Riot-Token': RIOT_API_KEY})
+        match_dto = response.json()
+        if not response.ok : raise Exception("Could not get match details", match_dto)
+        
+        rank_message = ""
+        queue_id = match_dto['info']['queueId']
+
+        queue_dict = {
+            420: {
+                'type': 'RANKED_SOLO_5x5',
+                'str': "SOLO/DUO",
+            },
+            440: {
+                'type': 'RANKED_FLEX_SR',
+                'str': "FLEX",
+            },
+            1700: {
+                'type': 'CHERRY',
+                'str': "ARENA",
+            },
+        }
+        
+        if queue_id in queue_dict:
+            queue_str = queue_dict[queue_id]['str']
+            queue_type = queue_dict[queue_id]['type']
+
+            rank_message = f"\n\n{queue_str}"
+
+            league_entries_url = f"https://{USER_REGION}.api.riotgames.com/lol/league/v4/entries/by-summoner/{summoner_eid}"
+            response = requests.get(league_entries_url, headers={'X-Riot-Token': RIOT_API_KEY})
+            league_entries = response.json()
+            if not response.ok : raise Exception("Could not get league entries", league_entries)
+
+            for entry in league_entries:
+                if entry['queueType'] == queue_type:
+                    try:
+                        if entry['tier'] in ['MASTER', 'GRANDMASTER', 'CHALLENGER']:
+                            rank_message += f"\n{entry['tier']} {entry['leaguePoints']}LP"
+                        else:
+                            rank_message += f"\n{entry['tier']} {entry['rank']} {entry['leaguePoints']}LP"
+                    except KeyError:
+                        pass
+
+                    try:
+                        wins = entry['wins']
+                        losses = entry['losses']
+                        total = 100 * wins / (wins + losses)
+                        rank_message += f"\n{wins}W {losses}L {total:.2f}% WR"
+                    except KeyError:
+                        pass
+            
+            participants = match_dto['info']['participants']
+            numeric_id = match.split("_")[1]
+            
+            duration_multiplier = 1000 if 'gameEndTimestamp' not in match_dto['info'] else 1
+            if match_dto['info']['gameDuration'] <= 5 * 60 * duration_multiplier:
+                # game lasted less than 5 minutes - likely a remake
+                response = requests.post(WEBHOOK_URL, json={'embeds': [
+                    {
+                        "title": username,
+                        "description": f"remake...",
+                        "color": 8421504,
+                        "footer": {
+                            "text": f"ID: {numeric_id}"
+                        },
+                    },
+                ]})
+                if not response.ok:
+                    raise Exception("Could not post to Discord")
+            else:
+                for p in participants:
+                    if p['puuid'] == puuid:
+                        emoji = ":trophy:" if p['win'] else ":cold_face:"
+                        result = "won" if p['win'] else "lost"
+                        color = 6591981 if p['win'] else 16737095
+                        print(f"game {result} (ID: {numeric_id})")
+
+                        placement = ''
+                        if p.get('placement', 0) != 0:
+                            placement = f"{add_ordinal_suffix(p['placement'])} place\n"
+
+                        data['last_match'] = str(matches_dto[0])
+                        return{'embeds': [
+                            {
+                                "title": username,
+                                "description": f"{placement}game {result} {emoji}{rank_message}",
+                                "color": color,
+                                "footer": {
+                                    "text": f"ID: {numeric_id}"
+                                },
+                            },
+                        ]}

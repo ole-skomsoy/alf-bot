@@ -2,12 +2,13 @@ import discord as disc
 from discord.ext import commands
 import datetime
 import requests
+import shelve
 import jsonpickle
 import random
 import comics
 from helpers import *
 from lurke_rob_cog import *
-from solo_que_rob_cog import *
+from solo_queue_rob_cog import *
 from riot_wrapper import *
 
 class lurke_rob(commands.Bot):
@@ -77,14 +78,21 @@ class lurke_rob(commands.Bot):
     
     def check_in_game(self):
         accounts = riot_wrapper.get_account_dtos()
-        for account in accounts:
-            summoner = riot_wrapper.get_summoner_dto(account)
-            active_game = riot_wrapper.get_active_game(account, summoner)
-            if active_game : self.notify_active_game(active_game)
+        for account in accounts:            
+            # with shelve.open('/home/pi/code/alf-bot/src/solo_queue.txt') as data:
+            with shelve.open('C:/Code/alf-bot/src/solo_queue.txt') as data:
+                for key in ['summoner_id', 'in_game', 'last_match']:
+                    if key not in data:
+                        data[key] = ''  
 
+            summoner = riot_wrapper.get_summoner_dto(account)
+            active_game = riot_wrapper.get_active_game(account, summoner, data)
+            if active_game : self.lol_notify(active_game)
             
+            game_result = riot_wrapper.get_game_result(account, summoner, data)
+            if active_game : self.lol_notify(active_game)
     
-    def notify_active_game(active_game):
+    def lol_notify(active_game):
         response = requests.post(WEBHOOK_URL, json=active_game)
         if not response:
             raise Exception("Could not post to discord")
