@@ -79,9 +79,17 @@ class lurke_rob(commands.Bot):
         accounts = riot_wrapper.get_account_dtos()
         for account in accounts:
             summoner = riot_wrapper.get_summoner_dto(account)
-            a = 2
-        a = 2
+            active_game = riot_wrapper.get_active_game(account, summoner)
+            if active_game : self.notify_active_game(active_game)
+
+            
     
+    def notify_active_game(active_game):
+        response = requests.post(WEBHOOK_URL, json=active_game)
+        if not response:
+            raise Exception("Could not post to discord")
+           
+
     async def send_quote_message(self, channel, quote, cat):
         embed = disc.Embed(title=quote['a'], description=quote['q'], type='image')
         embed = embed.set_image(url=cat['url'])
@@ -127,13 +135,9 @@ class lurke_rob(commands.Bot):
     async def react_to_message(self, message, reactions):
         await message.add_reaction(random.choice(reactions))
 
-
-    
-
     def log(self, object):
         print(jsonpickle.encode(object))
         print('----------------------------------------------------------------------------')
-
 
 intents = disc.Intents.default()
 intents.message_content = True
