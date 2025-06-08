@@ -90,7 +90,7 @@ class lurke_rob(commands.Bot):
             if active_game : self.lol_notify(active_game)
             
             game_result = riot_wrapper.get_game_result(account, summoner, data)
-            if active_game : self.lol_notify(active_game)
+            if active_game : self.lol_notify(game_result)
     
     def lol_notify(active_game):
         response = requests.post(WEBHOOK_URL, json=active_game)
