@@ -18,4 +18,3 @@ class solo_que_rob_cog(commands.Cog):
     @tasks.loop(seconds=5)
     async def check_game_result(self):
         pass
-        # await self.solo_que_bot.check_game_result(True, True, True, True)

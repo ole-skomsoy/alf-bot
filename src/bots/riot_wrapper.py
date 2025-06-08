@@ -23,5 +23,14 @@ class riot_wrapper():
             response = requests.get(account_url, headers={'X-Riot-Token': RIOT_API_KEY}).json()
             if not response:
                 raise Exception("Could not get account", response)
-            accounts.add(response)
+            accounts.append(response)
         return accounts
+    
+    def get_summoner_dto(account_dto):
+        puuid = account_dto['puuid']
+        summoner_by_puuid_url = f"https://{USER_REGION}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{puuid}"
+        response = requests.get(summoner_by_puuid_url, headers={'X-Riot-Token': RIOT_API_KEY})
+        summoner_dto = response.json()
+        if not response:
+            raise Exception("Could not get summoner", summoner_dto)
+        return summoner_dto

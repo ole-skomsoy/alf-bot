@@ -77,6 +77,9 @@ class lurke_rob(commands.Bot):
     
     def check_in_game(self):
         accounts = riot_wrapper.get_account_dtos()
+        for account in accounts:
+            summoner = riot_wrapper.get_summoner_dto(account)
+            a = 2
         a = 2
     
     async def send_quote_message(self, channel, quote, cat):
