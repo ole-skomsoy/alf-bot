@@ -56,7 +56,7 @@ class riot_wrapper():
         if not response.ok : raise Exception("Could not get active game", current_game_info)
         
         current_game = str(current_game_info['gameId'])
-        previous_game = user_in_game[puuid]
+        previous_game = get_value(user_in_game, puuid)
         if previous_game == current_game : return
         
         current_game = str(current_game_info['gameId'])
@@ -83,29 +83,26 @@ class riot_wrapper():
         print(message)
         
         user_in_game[puuid] = str(current_game)
-        return {'embeds': [
-            {
-                "title": username,
+        return {
+            "title": username,
                 "description": textwrap.dedent(
                     f"""
                     started a new game :sparkles:
                     
                     it's their {add_ordinal_suffix(matches_today + 1)} game today,
                     {add_ordinal_suffix(matches_past_24h + 1)} game in the past 24h
+                    
+                    ID: {current_game}
                     """
                 ),
                 "color": 16738740,
-                "footer": {
-                    "text": f"ID: {current_game}"
-                },
-            },
-        ]}
+        }
         
     def get_game_result(account, summoner):
         puuid = summoner['puuid']
         username = f"**{account['gameName']}** #{account['tagLine']}"
         summoner_eid = summoner['id']
-        last_match = user_in_game[puuid]
+        last_match = get_value(user_in_game, puuid)
         
         matches_by_puuid_url = f"https://{WIDE_REGION}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids"
         response = requests.get(matches_by_puuid_url, params={'count': 1}, headers={'X-Riot-Token': RIOT_API_KEY})
@@ -182,11 +179,8 @@ class riot_wrapper():
                 response = requests.post(WEBHOOK_URL, json={'embeds': [
                     {
                         "title": username,
-                        "description": f"remake...",
-                        "color": 8421504,
-                        "footer": {
-                            "text": f"ID: {numeric_id}"
-                        },
+                        "description": f"remake...\nID:{numeric_id}",
+                        "color": 8421504
                     },
                 ]})
                 if not response.ok:
@@ -194,23 +188,18 @@ class riot_wrapper():
             else:
                 for p in participants:
                     if p['puuid'] == puuid:
-                        emoji = ":trophy:" if p['win'] else ":cold_face:"
-                        result = "won" if p['win'] else "lost"
-                        color = 6591981 if p['win'] else 16737095
-                        print(f"game {result} (ID: {numeric_id})")
+                        emoji = ":trophy:" if p['win'] else ":poop:"
+                        result = "WON" if p['win'] else "LOST"
+                        color = 44197 if p['win'] else 15232903
+                        print(f"{result} (ID: {numeric_id})")
 
                         placement = ''
                         if p.get('placement', 0) != 0:
-                            placement = f"{add_ordinal_suffix(p['placement'])} place\n"
+                            placement = f"{add_ordinal_suffix(p['placement'])} place\n\nID: {numeric_id}"
 
                         user_in_game[puuid] = str(matches_dto[0])
-                        return{'embeds': [
-                            {
-                                "title": username,
-                                "description": f"{placement}game {result} {emoji}{rank_message}",
+                        return {
+                            "title": username,
+                                "description": f"{placement} {result} {emoji}{rank_message}",
                                 "color": color,
-                                "footer": {
-                                    "text": f"ID: {numeric_id}"
-                                },
-                            },
-                        ]}
+                        }

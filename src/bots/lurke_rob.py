@@ -77,22 +77,24 @@ class lurke_rob(commands.Bot):
     
     async def check_in_game(self):
         lol_channel = self.get_channel(read_secret('lol_channel'))
+        if not lol_channel : return
         accounts = riot_wrapper.get_account_dtos()
         
         for account in accounts:            
             summoner = riot_wrapper.get_summoner_dto(account)
             active_game = riot_wrapper.get_active_game(account, summoner)
             if active_game: 
-                lol_message = self.lol_notify(lol_channel, active_game)
+                lol_message = await self.lol_notify(lol_channel, active_game)
                 await self.react_to_message(lol_message, self.meme_reactions)
+                return
             
             game_result = riot_wrapper.get_game_result(account, summoner)
             if game_result: 
-                lol_message = self.lol_notify(lol_channel, game_result)
+                lol_message = await self.lol_notify(lol_channel, game_result)
                 await self.react_to_message(lol_message, self.meme_reactions)
     
-    async def lol_notify(channel, game_object):
-        return await channel.send(embed=game_object)
+    async def lol_notify(self, channel, game_object):
+        return await channel.send(embed=disc.Embed(title=game_object['title'], description=game_object['description'], color=game_object['color']))
            
     async def send_quote_message(self, channel, quote, cat):
         embed = disc.Embed(title=quote['a'], description=quote['q'], type='image')

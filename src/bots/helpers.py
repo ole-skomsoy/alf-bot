@@ -24,3 +24,9 @@ def add_ordinal_suffix(n):
         return f"{n}rd"
 
     return f"{n}th"
+
+def get_value(dict, key):
+    try:
+        return dict[key]
+    except KeyError:
+        return None
