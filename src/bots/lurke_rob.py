@@ -2,7 +2,6 @@ import discord as disc
 from discord.ext import commands
 import datetime
 import requests
-import shelve
 import jsonpickle
 import random
 import comics
@@ -79,11 +78,7 @@ class lurke_rob(commands.Bot):
     def check_in_game(self):
         accounts = riot_wrapper.get_account_dtos()
         for account in accounts:            
-            # with shelve.open('/home/pi/code/alf-bot/src/solo_queue.txt') as data:
-            with shelve.open('C:/Code/alf-bot/src/solo_queue.txt') as data:
-                for key in ['summoner_id', 'in_game', 'last_match']:
-                    if key not in data:
-                        data[key] = ''  
+
 
             summoner = riot_wrapper.get_summoner_dto(account)
             active_game = riot_wrapper.get_active_game(account, summoner, data)

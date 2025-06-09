@@ -1,3 +1,0 @@
-'summoner_id', (0, 15)
-'in_game', (512, 15)
-'last_match', (1024, 15)

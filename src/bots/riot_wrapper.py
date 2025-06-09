@@ -13,7 +13,13 @@ except KeyError as e:
     print(e, "must be specified in config [riot] section")
     exit(1)
 
+user_in_game = {}
+
 class riot_wrapper():
+    def __init__(self):
+        for id in RIOT_IDS:
+            self.user_in_game[id] = ''
+    
     def get_account_dtos():
         accounts = []
         for id in RIOT_IDS:
@@ -21,11 +27,11 @@ class riot_wrapper():
             name = id[:separator_index]
             tag = id[separator_index + 1:]
             account_url = f"https://{WIDE_REGION}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{name}/{tag}"
-            response = requests.get(account_url, headers={'X-Riot-Token': RIOT_API_KEY}).json()
+            response = requests.get(account_url, headers={'X-Riot-Token': RIOT_API_KEY})
             
-            if not response:
+            if not response.ok:
                 raise Exception("Could not get account", response)
-            accounts.append(response)
+            accounts.append(response.json())
         return accounts
     
     def get_summoner_dto(account_dto):
@@ -34,11 +40,11 @@ class riot_wrapper():
         response = requests.get(summoner_by_puuid_url, headers={'X-Riot-Token': RIOT_API_KEY})
         summoner_dto = response.json()
         
-        if not response:
+        if not response.ok:
             raise Exception("Could not get summoner", summoner_dto)
         return summoner_dto
     
-    def get_active_game(account, summoner, data):
+    def get_active_game(account, summoner):
         puuid = summoner['puuid']
         username = f"**{account['gameName']}** #{account['tagLine']}"
         
@@ -47,10 +53,10 @@ class riot_wrapper():
         current_game_info = response.json()
         
         if response.status_code == 404 : return
-        if not response : raise Exception("Could not get active game", current_game_info)
+        if not response.ok : raise Exception("Could not get active game", current_game_info)
         
         current_game = str(current_game_info['gameId'])
-        previous_game = data[puuid]['in_game']
+        previous_game = user_in_game[puuid]
         if previous_game == current_game : return
         
         current_game = str(current_game_info['gameId'])
@@ -64,19 +70,19 @@ class riot_wrapper():
         response = requests.get(matches_by_puuid_url, params={'startTime': midnight_epoch}, headers={'X-Riot-Token': RIOT_API_KEY})
         matches_dto = response.json()
         
-        if not response: raise Exception("Could not get match history", matches_dto)
+        if not response.ok : raise Exception("Could not get match history", matches_dto)
         matches_today = len(matches_dto)
         
         response = requests.get(matches_by_puuid_url, params={'startTime': day_ago_epoch}, headers={'X-Riot-Token': RIOT_API_KEY})
         matches_dto = response.json()
         
-        if not response: raise Exception("Could not get match history", matches_dto)
+        if not response.ok : raise Exception("Could not get match history", matches_dto)
         matches_past_24h = len(matches_dto)
         
         message = f"{username} started a new game (ID: {current_game})"
         print(message)
         
-        data['in_game'] = str(current_game)
+        user_in_game[puuid] = str(current_game)
         return {'embeds': [
             {
                 "title": username,
@@ -95,17 +101,17 @@ class riot_wrapper():
             },
         ]}
         
-    def get_game_result(account, summoner, data):
+    def get_game_result(account, summoner):
         puuid = summoner['puuid']
         username = f"**{account['gameName']}** #{account['tagLine']}"
         summoner_eid = summoner['id']
-        last_match = data['last_match']
+        last_match = user_in_game[puuid]
         
         matches_by_puuid_url = f"https://{WIDE_REGION}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids"
         response = requests.get(matches_by_puuid_url, params={'count': 1}, headers={'X-Riot-Token': RIOT_API_KEY})
         matches_dto = response.json()
         
-        if not response : raise Exception("Could not get match history", matches_dto)
+        if not response.ok : raise Exception("Could not get match history", matches_dto)
         if not matches_dto : return
         
         match = matches_dto[0]
@@ -120,6 +126,10 @@ class riot_wrapper():
         queue_id = match_dto['info']['queueId']
 
         queue_dict = {
+            400: {
+                'type': 'ARAM',
+                'str': "ARAM",
+            },
             420: {
                 'type': 'RANKED_SOLO_5x5',
                 'str': "SOLO/DUO",
@@ -193,7 +203,7 @@ class riot_wrapper():
                         if p.get('placement', 0) != 0:
                             placement = f"{add_ordinal_suffix(p['placement'])} place\n"
 
-                        data['last_match'] = str(matches_dto[0])
+                        user_in_game[puuid] = str(matches_dto[0])
                         return{'embeds': [
                             {
                                 "title": username,
