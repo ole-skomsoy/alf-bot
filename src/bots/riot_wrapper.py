@@ -1,6 +1,7 @@
 import requests
 import datetime
 import textwrap
+import collections
 from helpers import *
 
 try:
@@ -13,13 +14,14 @@ except KeyError as e:
     print(e, "must be specified in config [riot] section")
     exit(1)
 
-user_in_game = {}
+user_in_game = collections.defaultdict(dict)
 
 class riot_wrapper():
     def __init__(self):
         for id in RIOT_IDS:
-            user_in_game[id] = ''
-    
+            set_value(user_in_game, id, 'previous_game', '')
+            set_value(user_in_game, id, 'last_match', '')
+            
     def get_account_dtos():
         accounts = []
         for id in RIOT_IDS:
@@ -56,7 +58,7 @@ class riot_wrapper():
         if not response.ok : raise Exception("Could not get active game", current_game_info)
         
         current_game = str(current_game_info['gameId'])
-        previous_game = get_value(user_in_game, puuid)
+        previous_game = get_value(user_in_game, puuid, 'previous_game')
         if previous_game == current_game : return
         
         current_game = str(current_game_info['gameId'])
@@ -82,14 +84,15 @@ class riot_wrapper():
         message = f"{username} started a new game (ID: {current_game})"
         print(message)
         
-        user_in_game[puuid] = str(current_game)
+        # user_in_game[str(puuid)]['previous_game'] = str(current_game)
+        set_value(user_in_game, puuid, 'previous_game', str(current_game))
         return {
             "title": username,
                 "description": textwrap.dedent(
                     f"""
-                    started a new game :sparkles:
+                    Started a new game :sparkles:
                     
-                    it's their {add_ordinal_suffix(matches_today + 1)} game today,
+                    It's their {add_ordinal_suffix(matches_today + 1)} game today,
                     {add_ordinal_suffix(matches_past_24h + 1)} game in the past 24h
                     
                     ID: {current_game}
@@ -102,7 +105,7 @@ class riot_wrapper():
         puuid = summoner['puuid']
         username = f"**{account['gameName']}** #{account['tagLine']}"
         summoner_eid = summoner['id']
-        last_match = get_value(user_in_game, puuid)
+        last_match = get_value(user_in_game, puuid, 'last_match')
         
         matches_by_puuid_url = f"https://{WIDE_REGION}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids"
         response = requests.get(matches_by_puuid_url, params={'count': 1}, headers={'X-Riot-Token': RIOT_API_KEY})
@@ -123,10 +126,6 @@ class riot_wrapper():
         queue_id = match_dto['info']['queueId']
 
         queue_dict = {
-            400: {
-                'type': 'ARAM',
-                'str': "ARAM",
-            },
             420: {
                 'type': 'RANKED_SOLO_5x5',
                 'str': "SOLO/DUO",
@@ -134,6 +133,10 @@ class riot_wrapper():
             440: {
                 'type': 'RANKED_FLEX_SR',
                 'str': "FLEX",
+            },
+            450: {
+                'type': 'ARAM',
+                'str': "ARAM",
             },
             1700: {
                 'type': 'CHERRY',
@@ -197,9 +200,11 @@ class riot_wrapper():
                         if p.get('placement', 0) != 0:
                             placement = f"{add_ordinal_suffix(p['placement'])} place\n\nID: {numeric_id}"
 
-                        user_in_game[puuid] = str(matches_dto[0])
+                        set_value(user_in_game, puuid, 'last_match', str(matches_dto[0]))
                         return {
                             "title": username,
                                 "description": f"{placement} {result} {emoji}{rank_message}",
                                 "color": color,
                         }
+                        
+        # set_value(user_in_game, puuid, 'last_match', str(matches_dto[0]))

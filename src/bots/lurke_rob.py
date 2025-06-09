@@ -1,6 +1,7 @@
 import discord as disc
 from discord.ext import commands
 import datetime
+import collections
 import requests
 import jsonpickle
 import random
@@ -74,7 +75,16 @@ class lurke_rob(commands.Bot):
             return requests.get(f'{read_secret('cat_api')}/cat?json=true').json()
         except:
             print('>>> error getting random cat')                      
-    
+        
+    def test_dict(self):
+        dict_1 = collections.defaultdict(dict)
+        a = get_value(dict_1, 'A', 1)
+        dict_1['A'][1] = 100
+        dict_1['B'][2] = 200
+        dict_1['C'][2] = 300
+        b = get_value(dict_1, 'A', 1)
+        c = 2
+            
     async def check_in_game(self):
         lol_channel = self.get_channel(read_secret('lol_channel'))
         if not lol_channel : return

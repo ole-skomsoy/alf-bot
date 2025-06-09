@@ -25,8 +25,14 @@ def add_ordinal_suffix(n):
 
     return f"{n}th"
 
-def get_value(dict, key):
+def get_value(dict, key1, key2):
     try:
-        return dict[key]
+        return dict[key1][key2]
     except KeyError:
         return None
+    
+def set_value(dict, key1, key2, value):
+    try:
+        dict[key1][key2] = value
+    except KeyError:
+        return
