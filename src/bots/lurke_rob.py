@@ -3,6 +3,7 @@ from discord.ext import commands
 import datetime
 import collections
 import requests
+import shelve
 import jsonpickle
 import random
 import comics
@@ -27,6 +28,36 @@ class lurke_rob(commands.Bot):
 
     async def on_message(self, message):
         await self.react_if_interesting_message(message)
+    
+    async def on_raw_reaction_add(self, payload):
+        channel = self.get_channel(payload.channel_id)
+        message = await channel.fetch_message(payload.message_id)
+     
+        if message.author != self.user : return
+        if self.is_ext_content_message(message) : return
+        
+        with shelve.open('urge_register') as db:
+            try:
+                urges = db[str(payload.user_id)]
+                db[str(payload.user_id)] = urges + 1
+            except KeyError:
+                db[str(payload.user_id)] = 1
+    
+    def can_afford_meme(self, message):
+        with shelve.open('urge_register') as db:
+            try:
+                urges = db[str(message.user_id)]
+                return urges >= 10
+            except KeyError:
+                return False
+    
+    def buy_meme(self, message):
+        with shelve.open('urge_register') as db:
+            try:
+                urges = db[str(message.user_id)]
+                db[str(message.user_id)] = urges - 10
+            except KeyError:
+                return
     
     async def set_default_status(self):
         await self.change_presence(
@@ -157,24 +188,25 @@ class lurke_rob(commands.Bot):
 
 intents = disc.Intents.default()
 intents.message_content = True
+intents.reactions = True
 
 # dont bother trying to change the command prefix
 bot = lurke_rob(command_prefix='/', intents=intents)
 
-@bot.tree.command(name='lr_get_random_tune', description = "Get a random tune from the tune channel")
+@bot.tree.command(name='lr_buy_meme', description = "Buy a random meme from the meme channel (costs 10 urge)")
 async def get_random_meme_command(ctx):
-    await bot.post_random_messages(True, False, False, False)
-    await ctx.response.send_message(content='member?', delete_after=3.0)
-
-@bot.tree.command(name='lr_get_random_meme', description = "Get a random meme from the meme channel")
-async def get_random_meme_command(ctx):
+    if not bot.can_afford_meme(ctx.response.message):
+        await ctx.response.send_message(content='for lite urge, farr!', delete_after=3.0)
+        return
+    
+    bot.buy_meme(ctx.response.message)
     await bot.post_random_messages(False, True, False, False)
-    await ctx.response.send_message(content='member?', delete_after=3.0)
+    await ctx.response.send_message(content='her farr, *SLURP*!', delete_after=3.0)
 
 @bot.tree.command(name='lr_sync_commands', description = "Sync commands between client and server")
 async def sync_commands(ctx):
     await bot.tree.sync()
-    await ctx.response.send_message(content='syncing commands', delete_after=3.0)
+    await ctx.response.send_message(content='synkroniserer...', delete_after=3.0)
 
 token = read_secret('lurke_rob_access_token')
 bot.run(token)
