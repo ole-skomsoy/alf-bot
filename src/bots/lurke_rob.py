@@ -75,24 +75,25 @@ class lurke_rob(commands.Bot):
         except:
             print('>>> error getting random cat')                      
     
-    def check_in_game(self):
+    async def check_in_game(self):
+        lol_channel = self.get_channel(read_secret('lol_channel'))
         accounts = riot_wrapper.get_account_dtos()
+        
         for account in accounts:            
-
-
             summoner = riot_wrapper.get_summoner_dto(account)
-            active_game = riot_wrapper.get_active_game(account, summoner, data)
-            if active_game : self.lol_notify(active_game)
+            active_game = riot_wrapper.get_active_game(account, summoner)
+            if active_game: 
+                lol_message = self.lol_notify(lol_channel, active_game)
+                await self.react_to_message(lol_message, self.meme_reactions)
             
-            game_result = riot_wrapper.get_game_result(account, summoner, data)
-            if active_game : self.lol_notify(game_result)
+            game_result = riot_wrapper.get_game_result(account, summoner)
+            if game_result: 
+                lol_message = self.lol_notify(lol_channel, game_result)
+                await self.react_to_message(lol_message, self.meme_reactions)
     
-    def lol_notify(active_game):
-        response = requests.post(WEBHOOK_URL, json=active_game)
-        if not response:
-            raise Exception("Could not post to discord")
+    async def lol_notify(channel, game_object):
+        return await channel.send(embed=game_object)
            
-
     async def send_quote_message(self, channel, quote, cat):
         embed = disc.Embed(title=quote['a'], description=quote['q'], type='image')
         embed = embed.set_image(url=cat['url'])

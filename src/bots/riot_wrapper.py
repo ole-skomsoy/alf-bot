@@ -18,7 +18,7 @@ user_in_game = {}
 class riot_wrapper():
     def __init__(self):
         for id in RIOT_IDS:
-            self.user_in_game[id] = ''
+            user_in_game[id] = ''
     
     def get_account_dtos():
         accounts = []
