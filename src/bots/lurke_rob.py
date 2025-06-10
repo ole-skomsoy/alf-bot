@@ -43,21 +43,28 @@ class lurke_rob(commands.Bot):
             except KeyError:
                 db[str(payload.user_id)] = 1
     
-    def can_afford_meme(self, message):
+    def can_afford_meme(self, user):
         with shelve.open('urge_register') as db:
             try:
-                urges = db[str(message.user_id)]
+                urges = db[str(user.id)]
                 return urges >= 10
             except KeyError:
                 return False
     
-    def buy_meme(self, message):
+    def buy_meme(self, user):
         with shelve.open('urge_register') as db:
             try:
-                urges = db[str(message.user_id)]
-                db[str(message.user_id)] = urges - 10
+                urges = db[str(user.id)]
+                db[str(user.id)] = urges - 10
             except KeyError:
                 return
+    
+    def get_urge_amount(self, user):
+        with shelve.open('urge_register') as db:
+            try:
+                return db[str(user.id)]
+            except KeyError:
+                return  0
     
     async def set_default_status(self):
         await self.change_presence(
@@ -195,18 +202,18 @@ bot = lurke_rob(command_prefix='/', intents=intents)
 
 @bot.tree.command(name='lr_buy_meme', description = "Buy a random meme from the meme channel (costs 10 urge)")
 async def get_random_meme_command(ctx):
-    if not bot.can_afford_meme(ctx.response.message):
-        await ctx.response.send_message(content='for lite urge, farr!', delete_after=3.0)
+    if not bot.can_afford_meme(ctx.user):
+        await ctx.response.send_message(content=f'For lite urge, farr! ({bot.get_urge_amount(ctx.user)})', delete_after=3.0)
         return
     
-    bot.buy_meme(ctx.response.message)
+    bot.buy_meme(ctx.user)
     await bot.post_random_messages(False, True, False, False)
-    await ctx.response.send_message(content='her farr, *SLURP*!', delete_after=3.0)
+    await ctx.response.send_message(content='Her farr, *SLURP*!', delete_after=3.0)
 
 @bot.tree.command(name='lr_sync_commands', description = "Sync commands between client and server")
 async def sync_commands(ctx):
     await bot.tree.sync()
-    await ctx.response.send_message(content='synkroniserer...', delete_after=3.0)
+    await ctx.response.send_message(content='Synkroniserer...', delete_after=3.0)
 
 token = read_secret('lurke_rob_access_token')
 bot.run(token)
