@@ -11,4 +11,3 @@ class solo_que_rob_cog(commands.Cog):
     @tasks.loop(seconds=10)
     async def check_in_game(self):
         await self.solo_que_bot.check_in_game()
-        # self.solo_que_bot.test_dict()
