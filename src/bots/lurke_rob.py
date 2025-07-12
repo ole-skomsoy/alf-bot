@@ -43,37 +43,6 @@ class lurke_rob(commands.Bot):
                 db[str(payload.user_id)] = urges + 1
             except KeyError:
                 db[str(payload.user_id)] = 1
-    
-    def can_afford_meme(self, user):
-        with shelve.open('urge_register') as db:
-            try:
-                urges = db[str(user.id)]
-                return urges >= 10
-            except KeyError:
-                return False
-    
-    def buy_meme(self, user_id):
-        with shelve.open('urge_register') as db:
-            try:
-                urges = db[str(user_id.id)]
-                db[str(user_id.id)] = urges - 10
-            except KeyError:
-                return
-    
-    def get_urge_amount(self, user):
-        with shelve.open('urge_register') as db:
-            try:
-                return db[str(user.id)]
-            except KeyError:
-                return  0
-
-    def get_paid_in_urge(self, user):
-        with shelve.open('urge_register') as db:
-            try:
-                urges =  db[str(user.id)]
-                db[str(user.id)] = urges + 1
-            except KeyError:
-                return  0
 
     async def set_default_status(self):
         await self.change_presence(
@@ -216,20 +185,15 @@ intents.reactions = True
 # dont bother trying to change the command prefix
 bot = lurke_rob(command_prefix='/', intents=intents)
 
-@bot.tree.command(name='lr_buy_meme', description = "Buy a random meme from the meme channel (costs 10 urge)")
-async def get_random_meme_command(ctx):
-    if not bot.can_afford_meme(ctx.user):
-        await ctx.response.send_message(content=f'For lite urge, farr! ({bot.get_urge_amount(ctx.user)})', delete_after=3.0)
-        return
-    
-    bot.buy_meme(ctx.user)
-    await bot.post_random_messages(False, True, False, False)
-    await ctx.response.send_message(content='Her farr, *SLURP*!', delete_after=3.0)
+@bot.tree.command(name='lr_cat', description = "Get a random cat 'n quote from the heavens")
+async def get_random_cat_command(ctx):
+    await bot.post_random_messages(False, False, True, False)
+    await ctx.response.send_message(content=f'Dinna e gratis, farr', delete_after=3.0)
 
-@bot.tree.command(name='lr_stash', description = "Check your current urge stash")
+@bot.tree.command(name='lr_meme', description = "Get a random meme from the meme channel")
 async def get_random_meme_command(ctx):
-    if not bot.can_afford_meme(ctx.user):
-        await ctx.response.send_message(content=f'Her e stashen! (urge: {bot.get_urge_amount(ctx.user)})', delete_after=3.0)
+    await bot.post_random_messages(False, True, False, False)
+    await ctx.response.send_message(content=f'Dinna e gratis, farr', delete_after=3.0)
 
 @bot.tree.command(name='lr_sync_commands', description = "Sync commands between client and server")
 async def sync_commands(ctx):
