@@ -1,9 +1,7 @@
 import discord as disc
 from discord.ext import commands
 import datetime
-import collections
 import requests
-import shelve
 import jsonpickle
 import random
 import comics
@@ -28,21 +26,6 @@ class lurke_rob(commands.Bot):
 
     async def on_message(self, message):
         await self.react_if_interesting_message(message)
-        await self.get_paid_in_urge_on_message(message)
-    
-    async def on_raw_reaction_add(self, payload):
-        channel = self.get_channel(payload.channel_id)
-        message = await channel.fetch_message(payload.message_id)
-     
-        if message.author != self.user : return
-        if self.is_ext_content_message(message) : return
-        
-        with shelve.open('urge_register') as db:
-            try:
-                urges = db[str(payload.user_id)]
-                db[str(payload.user_id)] = urges + 1
-            except KeyError:
-                db[str(payload.user_id)] = 1
 
     async def set_default_status(self):
         await self.change_presence(
@@ -90,16 +73,7 @@ class lurke_rob(commands.Bot):
         try:
             return requests.get(f'{read_secret('cat_api')}/cat?json=true').json()
         except:
-            print('>>> error getting random cat')                      
-        
-    def test_dict(self):
-        dict_1 = collections.defaultdict(dict)
-        a = get_value(dict_1, 'A', 1)
-        dict_1['A'][1] = 100
-        dict_1['B'][2] = 200
-        dict_1['C'][2] = 300
-        b = get_value(dict_1, 'A', 1)
-        c = 2
+            print('>>> error getting random cat')
             
     async def check_in_game(self):
         lol_channel = self.get_channel(read_secret('lol_channel'))
