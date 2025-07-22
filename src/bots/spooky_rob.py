@@ -7,6 +7,11 @@ import youtube_dl
 import random
 from helpers import *
 from spooky_rob_cog import *
+import urllib.request
+import requests
+import os
+
+is_pi = True;
 
 # Suppress noise about console usage from errors
 youtube_dl.utils.bug_reports_message = lambda: ''
@@ -60,13 +65,41 @@ class spooky_rob(commands.Bot):
         
     async def set_default_status(self):
         await self.change_presence(
-            activity=disc.Activity(type=disc.ActivityType.watching, name='you'),
+            activity=disc.Activity(type=disc.ActivityType.watching, name='you...'),
             status=disc.Status.dnd)
     
     async def set_listening_status(self, track):
         await self.change_presence(
             activity=disc.Activity(type=disc.ActivityType.playing, name=track),
             status=disc.Status.dnd)
+    
+    async def on_message(self, message):
+        await self.save_sound_byte(message)
+    
+    async def save_sound_byte(self, message):
+        channel = self.get_channel(message.channel.id)
+        posted_message = await channel.fetch_message(message.id)
+        
+        try:
+            sound_index = 0;
+            
+            folder_path = '/home/pi/code/alf-bot/src/bots/sounds' if is_pi else 'C:/Code/alf-bot/src/bots/sounds'
+            for entry in os.scandir(folder_path):
+                if entry.is_file():
+                    sound_index += 1
+            
+            doc = requests.get(posted_message.attachments[0].url)
+            if is_pi:
+                with open(f'/home/pi/code/alf-bot/src/bots/sounds/sr_{sound_index}.mp3', 'wb') as f:
+                    f.write(doc.content)
+            else:
+                with open(f'C:/Code/alf-bot/src/bots/sounds/sr_{sound_index}.mp3', 'wb') as f:
+                    f.write(doc.content)
+            
+            await self.play_sound(sound_index)
+            
+        except Exception as error:
+            print('Error saving mp3', error)
     
     async def on_voice_state_update(self, member, before, after):
         voice_channel = self.get_channel(read_secret('spooky_channel'))
@@ -93,13 +126,34 @@ class spooky_rob(commands.Bot):
         voice_client = disc.utils.get(self.voice_clients)
         if not voice_client or voice_client.is_playing() : return
         try:
-            # voice_client.play(disc.FFmpegPCMAudio(source=f'C:/Code/alf-bot/src/bots/sounds/sr_{random.randint(0,40)}.mp3'), after=lambda e: print('done', e))
-            voice_client.play(disc.FFmpegPCMAudio(source=f'/home/pi/code/alf-bot/src/bots/sounds/sr_{random.randint(0,40)}.mp3'), after=lambda e: print('done', e))
+            sound_index = 0;
+            folder_path = '/home/pi/code/alf-bot/src/bots/sounds' if is_pi else 'C:/Code/alf-bot/src/bots/sounds'
+            for entry in os.scandir(folder_path):
+                if entry.is_file():
+                    sound_index += 1
+
+            if is_pi:
+                voice_client.play(disc.FFmpegPCMAudio(source=f'/home/pi/code/alf-bot/src/bots/sounds/sr_{sound_index}.mp3'), after=lambda e: print('done', e))
+            else:    
+                voice_client.play(disc.FFmpegPCMAudio(source=f'C:/Code/alf-bot/src/bots/sounds/sr_{sound_index}.mp3'), after=lambda e: print('done', e))
             while voice_client.is_playing():
                 await asyncio.sleep(1)
             voice_client.stop()
         except Exception as e:
                 self.log(f"Error playing random sound: {e}")
+    
+    async def play_sound(self, sound_index):
+        voice_client = disc.utils.get(self.voice_clients)
+        if not voice_client or voice_client.is_playing() : return
+        
+        if is_pi:
+            voice_client.play(disc.FFmpegPCMAudio(source=f'/home/pi/code/alf-bot/src/bots/sounds/sr_{sound_index}.mp3'), after=lambda e: print('done', e))
+        else:    
+            voice_client.play(disc.FFmpegPCMAudio(source=f'C:/Code/alf-bot/src/bots/sounds/sr_{sound_index}.mp3'), after=lambda e: print('done', e))
+        
+        while voice_client.is_playing():
+            await asyncio.sleep(1)
+        voice_client.stop()
     
     async def play_yt(self, url):
         voice_client = disc.utils.get(self.voice_clients)
