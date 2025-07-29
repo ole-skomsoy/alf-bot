@@ -11,7 +11,7 @@ import urllib.request
 import requests
 import os
 
-is_pi = True;
+is_pi = False;
 
 # Suppress noise about console usage from errors
 youtube_dl.utils.bug_reports_message = lambda: ''
