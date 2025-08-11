@@ -4,7 +4,7 @@ import datetime
 import requests
 import jsonpickle
 import random
-import comics
+import praw
 from helpers import *
 from lurke_rob_cog import *
 from solo_queue_rob_cog import *
@@ -14,6 +14,14 @@ class lurke_rob(commands.Bot):
     quote_reactions = ['😺','😸','😹','😻','😼','😽','🙀','😿','😾']
     tune_reactions = ['🔥','🙏','😍','😤']
     meme_reactions = ['🤭','😂','🤣','😆'] 
+    
+    reddit = praw.Reddit(
+        client_id = read_section_secret("reddit", "client_id"),
+        client_secret = read_section_secret("reddit", "client_secret"),
+        username = read_section_secret("reddit", "username"),
+        password = read_section_secret("reddit", "password"),
+        user_agent = read_section_secret("reddit", "user_agent")
+    )
     
     async def setup_hook(self):
         await self.add_cog(lurke_rob_cog(self))
@@ -32,7 +40,7 @@ class lurke_rob(commands.Bot):
             activity=disc.Activity(type=disc.ActivityType.watching, name='you...'),
             status=disc.Status.dnd)
         
-    async def post_random_messages(self, from_tune_channel, from_meme_channel, from_quote_api):
+    async def post_random_messages(self, from_tune_channel, from_meme_channel, from_quote_api, post_to_reddit):
         repost_channel = self.get_channel(read_secret('repost_channel'))
         
         if from_tune_channel:
@@ -46,12 +54,15 @@ class lurke_rob(commands.Bot):
             meme_message = await self.get_random_message(meme_channel, 10)
             daily_meme_message = await self.forward_message(repost_channel, meme_message)
             await self.react_to_message(daily_meme_message, self.meme_reactions)
-            
+        
         if from_quote_api:
             quote_message = self.get_random_quote()
             cat = self.get_random_cat()
             daily_quote_message = await self.send_quote_message(repost_channel, quote_message, cat)
             await self.react_to_message(daily_quote_message, self.quote_reactions)
+            if post_to_reddit:
+                await self.post_to_reddit(quote_message, cat)
+            
 
     def get_random_quote(self):
         try:
@@ -69,6 +80,22 @@ class lurke_rob(commands.Bot):
         embed = disc.Embed(title=quote['a'], description=quote['q'], type='image')
         embed = embed.set_image(url=cat['url'])
         return await channel.send(embed=embed)
+
+    async def post_to_reddit(self, quote, cat):
+        image_name = "cat.png"
+        image_data = requests.get(cat['url']).content
+        with open(image_name, "wb") as handler:
+            handler.write(image_data)
+        
+        try:    
+            subreddit = self.reddit.subreddit("DailyCatQuotes")
+            subreddit.submit_image(
+                title = f"{quote['q']} - {quote['a']}",
+                image_path = image_name
+            )
+        except Exception as e:
+            print('>>> error posting to reddit', e)
+
 
     async def get_random_message(self, channel, retry_count):
         around = datetime.datetime.fromtimestamp(random.randint(
@@ -123,12 +150,12 @@ bot = lurke_rob(command_prefix='/', intents=intents)
 
 @bot.tree.command(name='lr_cat', description = "Get a random cat 'n quote from the heavens")
 async def get_random_cat_command(ctx):
-    await bot.post_random_messages(False, False, True)
+    await bot.post_random_messages(False, False, True, False)
     await ctx.response.send_message(content=f'Dinna e gratis, farr', delete_after=3.0)
 
 @bot.tree.command(name='lr_meme', description = "Get a random meme from the meme channel")
 async def get_random_meme_command(ctx):
-    await bot.post_random_messages(False, True, False)
+    await bot.post_random_messages(False, True, False, False)
     await ctx.response.send_message(content=f'Dinna e gratis, farr', delete_after=3.0)
 
 @bot.tree.command(name='lr_sync_commands', description = "Sync commands between client and server")
